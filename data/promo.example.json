@@ -1,0 +1,41 @@
+{
+  "hookText": "Stop browsing cluttered pages. Focus in one click.",
+  "promoVideoPath": "videos/screen-recording.mp4",
+  "musicPath": "audio/music.mp3",
+  "ctaText": "Install Background Picker free on the Chrome Web Store.",
+  "brandName": "Background Picker",
+  "accentColor": "#6ee7ff",
+  "vocabulary": [
+    "One-click clean themes",
+    "Distraction-free reading",
+    "Save and reuse presets",
+    "Fast browser performance"
+  ],
+  "captions": [
+    {
+      "start": 0.5,
+      "end": 2.2,
+      "text": "Pages feel cleaner instantly."
+    },
+    {
+      "start": 3.1,
+      "end": 5.0,
+      "text": "Apply visual themes while browsing."
+    },
+    {
+      "start": 5.2,
+      "end": 7.8,
+      "text": "Use presets built for focus and clarity."
+    },
+    {
+      "start": 10.5,
+      "end": 12.8,
+      "text": "Keep the style you like across tabs."
+    },
+    {
+      "start": 12.9,
+      "end": 14.7,
+      "text": "Install now and browse better."
+    }
+  ]
+}
