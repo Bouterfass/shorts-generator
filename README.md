@@ -1,20 +1,10 @@
 # Automated Shorts Generator (Remotion + React + TypeScript)
 
-This project generates **vertical short promo videos (1080x1920)** from a JSON file.
+This project generates **vertical videos (1080x1920)** from JSON.
 
-It includes reusable scenes for:
-- Intro hook
-- Screen recording
-- Vocabulary/benefits
-- CTA
-
-It also supports:
-- Dynamic text transitions
-- Subtle zoom/pan motion
-- Dark SaaS visual style
-- Optional captions/subtitles
-- Optional background music
-- Automatic MP4 export
+Supported templates:
+- `promo` (default): SaaS promo video with intro/demo/vocabulary/CTA
+- `quiz_2_choices`: interactive-style quiz video for social media
 
 ## 1. Setup
 
@@ -23,17 +13,41 @@ cd shorts-generator
 npm install
 ```
 
-## 2. Add your media
+## 2. Preview in Remotion Studio
 
-Put your files in:
-- `public/videos/screen-recording.mp4`
-- `public/audio/music.mp3` (optional)
+```bash
+npm run studio
+```
 
-You can use any file names, then reference them in your JSON input.
+You will see:
+- `PromoVideo`
+- `Quiz2ChoicesVideo`
 
-## 3. Edit JSON input
+## 3. Render MP4 automatically
 
-Use `data/promo.example.json` as your template.
+Promo example:
+
+```bash
+npm run render:example
+```
+
+Quiz example:
+
+```bash
+npm run render:quiz
+```
+
+Custom input/output:
+
+```bash
+npm run render -- data/my-input.json out/my-video.mp4
+```
+
+The render script auto-selects the composition from `input.type`.
+
+## Promo template (`type: "promo"` or no type)
+
+Example file: `data/promo.example.json`
 
 Required fields:
 - `hookText`
@@ -47,46 +61,59 @@ Optional fields:
 - `brandName`
 - `accentColor`
 
-## 4. Preview in Remotion Studio
+Media paths must reference files inside `public/`.
+Example:
+- `promoVideoPath: "videos/screen-recording.mp4"`
+- `musicPath: "audio/music.mp3"`
 
-```bash
-npm run studio
-```
+## Quiz template (`type: "quiz_2_choices"`)
 
-## 5. Render MP4 automatically
+Example file: `data/quiz.example.json`
 
-Default example:
+Required fields:
+- `type`: `"quiz_2_choices"`
+- `title`
+- `questions` (array)
+  - `word` (string)
+  - `choices` (exactly 2 choices)
+  - `correct` (`0` or `1`)
+- `cta`
 
-```bash
-npm run render:example
-```
+Optional fields:
+- `accentColor`
 
-Custom input and output:
+Behavior:
+- Title is pinned at the top for the whole video
+- For each question:
+  - Show: `Que veut dire {word} ?`
+  - Show 2 choices horizontally
+  - Wait 5 seconds
+  - Highlight the correct choice in green
 
-```bash
-npm run render -- data/my-video.json out/my-video.mp4
-```
-
-## JSON example
+### Valid quiz JSON example
 
 ```json
 {
-  "hookText": "Stop browsing cluttered pages. Focus in one click.",
-  "promoVideoPath": "videos/screen-recording.mp4",
-  "musicPath": "audio/music.mp3",
-  "ctaText": "Install Background Picker free on the Chrome Web Store.",
-  "brandName": "Background Picker",
-  "accentColor": "#6ee7ff",
-  "vocabulary": [
-    "One-click clean themes",
-    "Distraction-free reading",
-    "Save and reuse presets",
-    "Fast browser performance"
+  "type": "quiz_2_choices",
+  "title": "Quiz JLPT N5",
+  "questions": [
+    {
+      "word": "사랑",
+      "choices": ["Love", "Food"],
+      "correct": 0
+    },
+    {
+      "word": "晚安",
+      "choices": ["Good night", "Hello"],
+      "correct": 0
+    },
+    {
+      "word": "coeur",
+      "choices": ["Heart", "Chair"],
+      "correct": 0
+    }
   ],
-  "captions": [
-    {"start": 0.5, "end": 2.2, "text": "Pages feel cleaner instantly."},
-    {"start": 3.1, "end": 5.0, "text": "Apply visual themes while browsing."}
-  ]
+  "cta": "Learn while browsing"
 }
 ```
 
@@ -95,7 +122,8 @@ npm run render -- data/my-video.json out/my-video.mp4
 ```txt
 shorts-generator/
 ├─ data/
-│  └─ promo.example.json
+│  ├─ promo.example.json
+│  └─ quiz.example.json
 ├─ public/
 │  ├─ audio/
 │  └─ videos/
@@ -103,21 +131,14 @@ shorts-generator/
 │  └─ render.ts
 ├─ src/
 │  ├─ components/
-│  │  ├─ AnimatedWords.tsx
-│  │  ├─ CaptionTrack.tsx
-│  │  └─ SceneLayout.tsx
 │  ├─ compositions/
-│  │  └─ PromoVideo.tsx
+│  │  ├─ PromoVideo.tsx
+│  │  └─ Quiz2ChoicesVideo.tsx
 │  ├─ scenes/
-│  │  ├─ CtaScene.tsx
-│  │  ├─ IntroHookScene.tsx
-│  │  ├─ ScreenRecordingScene.tsx
-│  │  └─ VocabularyScene.tsx
+│  │  ├─ QuizQuestionScene.tsx
+│  │  └─ ...
 │  ├─ types/
 │  │  └─ video-input.ts
-│  ├─ utils/
-│  │  ├─ animations.ts
-│  │  └─ assets.ts
 │  ├─ constants.ts
 │  ├─ index.ts
 │  └─ Root.tsx

@@ -1,0 +1,23 @@
+{
+  "type": "quiz_2_choices",
+  "title": "Quiz JLPT N5",
+  "questions": [
+    {
+      "word": "사랑",
+      "choices": ["Love", "Food"],
+      "correct": 0
+    },
+    {
+      "word": "晚安",
+      "choices": ["Good night", "Hello"],
+      "correct": 0
+    },
+    {
+      "word": "coeur",
+      "choices": ["Heart", "Chair"],
+      "correct": 0
+    }
+  ],
+  "cta": "Learn while browsing",
+  "accentColor": "#6ee7ff"
+}

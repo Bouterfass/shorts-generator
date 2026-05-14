@@ -7,7 +7,8 @@
     "studio": "remotion studio src/index.ts",
     "typecheck": "tsc --noEmit",
     "render": "tsx scripts/render.ts",
-    "render:example": "tsx scripts/render.ts data/promo.example.json"
+    "render:example": "tsx scripts/render.ts data/promo.example.json",
+    "render:quiz": "tsx scripts/render.ts data/quiz.example.json out/quiz.mp4"
   },
   "dependencies": {
     "@remotion/bundler": "^4.0.0",
