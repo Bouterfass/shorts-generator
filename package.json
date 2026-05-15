@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "studio": "remotion studio src/index.ts",
+    "studio:quiz": "remotion studio src/index.ts --props=data/quiz.example.json",
+    "dropzone": "tsx scripts/dropzone.ts",
     "typecheck": "tsc --noEmit",
     "render": "tsx scripts/render.ts",
     "render:example": "tsx scripts/render.ts data/promo.example.json",

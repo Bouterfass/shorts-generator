@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JSON to Video Generator</title>
+    <style>
+      :root {
+        --bg: #0b1220;
+        --panel: #101a30;
+        --text: #e6eefc;
+        --muted: #9db0d0;
+        --line: #2a395b;
+        --ok: #22c55e;
+        --accent: #60a5fa;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+        background: radial-gradient(circle at 20% 10%, #142646 0%, var(--bg) 50%);
+        color: var(--text);
+        min-height: 100vh;
+        padding: 24px;
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        display: grid;
+        gap: 18px;
+      }
+
+      .card {
+        background: linear-gradient(180deg, rgba(16, 26, 48, 0.92), rgba(11, 18, 32, 0.94));
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 28px;
+      }
+
+      .sub {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 15px;
+      }
+
+      .dropzone {
+        border: 2px dashed #3f5f94;
+        border-radius: 14px;
+        padding: 26px;
+        text-align: center;
+        background: rgba(20, 32, 56, 0.5);
+        transition: all 0.2s ease;
+      }
+
+      .dropzone.active {
+        border-color: var(--accent);
+        background: rgba(39, 72, 125, 0.25);
+      }
+
+      .btn-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      button,
+      .file-label {
+        border: 1px solid #36507f;
+        background: #1a2a4a;
+        color: var(--text);
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 14px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .file-name {
+        margin-top: 12px;
+        color: #c7d5ee;
+        font-size: 14px;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 260px;
+        margin-top: 12px;
+        border-radius: 12px;
+        border: 1px solid #3a5787;
+        background: rgba(9, 14, 25, 0.9);
+        color: #e8f0ff;
+        padding: 14px;
+        resize: vertical;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+          'Courier New', monospace;
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      pre {
+        margin: 0;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        font-size: 13px;
+        color: #d6e4ff;
+        background: rgba(9, 14, 25, 0.9);
+        border: 1px solid #2a3a5d;
+        border-radius: 10px;
+        padding: 12px;
+        max-height: 280px;
+        overflow: auto;
+      }
+
+      .status {
+        margin-top: 12px;
+        color: var(--muted);
+      }
+
+      .status.error {
+        color: #fda4af;
+      }
+
+      .status.success {
+        color: #86efac;
+      }
+
+      video {
+        width: 320px;
+        max-width: 100%;
+        border-radius: 12px;
+        border: 1px solid #355285;
+        background: #000;
+      }
+
+      #fileInput {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <section class="card">
+        <h1>JSON Video Generator</h1>
+        <div class="sub">
+          Paste your JSON (or drop a file) and generate a video automatically with your Remotion
+          template.
+        </div>
+      </section>
+
+      <section class="card">
+        <div id="dropzone" class="dropzone">
+          <div><strong>Paste your JSON below</strong></div>
+          <div class="sub">You can also drop a .json file here or choose one manually.</div>
+
+          <div class="btn-row" style="justify-content: center; margin-top: 14px">
+            <label class="file-label" for="fileInput">Choose JSON</label>
+            <button id="applyTextareaBtn" type="button">Use pasted JSON</button>
+            <button id="renderBtn" type="button" disabled>Generate video</button>
+          </div>
+
+          <textarea
+            id="jsonTextarea"
+            placeholder='Paste your JSON here, for example:
+{
+  "type": "quiz_2_choices",
+  "title": "Quiz JLPT N5",
+  "questions": [
+    {"word":"사랑","choices":["Love","Food"],"correct":0}
+  ],
+  "cta": "Learn while browsing"
+}'
+          ></textarea>
+
+          <input id="fileInput" type="file" accept=".json,application/json" />
+          <div class="file-name" id="fileName">No file selected</div>
+          <div class="status" id="status">Paste JSON or select a file to continue.</div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3 style="margin-top: 0">JSON Preview</h3>
+        <pre id="preview">{}</pre>
+      </section>
+
+      <section class="card" id="resultCard" style="display: none">
+        <h3 style="margin-top: 0">Rendered Video</h3>
+        <video id="resultVideo" controls></video>
+        <div class="btn-row" style="margin-top: 12px">
+          <a id="downloadLink" class="file-label" href="#" download>Download MP4</a>
+        </div>
+        <pre id="logs" style="margin-top: 12px"></pre>
+      </section>
+    </main>
+
+    <script>
+      const dropzone = document.getElementById('dropzone');
+      const fileInput = document.getElementById('fileInput');
+      const applyTextareaBtn = document.getElementById('applyTextareaBtn');
+      const jsonTextarea = document.getElementById('jsonTextarea');
+      const renderBtn = document.getElementById('renderBtn');
+      const fileNameEl = document.getElementById('fileName');
+      const previewEl = document.getElementById('preview');
+      const statusEl = document.getElementById('status');
+      const resultCard = document.getElementById('resultCard');
+      const resultVideo = document.getElementById('resultVideo');
+      const downloadLink = document.getElementById('downloadLink');
+      const logsEl = document.getElementById('logs');
+
+      let currentJsonText = '';
+      let currentFileName = '';
+
+      const setStatus = (message, tone = '') => {
+        statusEl.textContent = message;
+        statusEl.className = `status ${tone}`.trim();
+      };
+
+      const applyJsonText = (text, sourceName) => {
+        JSON.parse(text);
+
+        currentJsonText = text;
+        currentFileName = sourceName;
+
+        fileNameEl.textContent = `Source: ${sourceName}`;
+        previewEl.textContent = text;
+        jsonTextarea.value = text;
+        renderBtn.disabled = false;
+        resultCard.style.display = 'none';
+        setStatus('JSON loaded. Ready to render.');
+      };
+
+      const readFile = async (file) => {
+        const text = await file.text();
+        applyJsonText(text, file.name);
+      };
+
+      const handleFiles = async (files) => {
+        const file = files?.[0];
+        if (!file) {
+          return;
+        }
+
+        try {
+          await readFile(file);
+        } catch (error) {
+          setStatus(`Invalid JSON: ${error.message}`, 'error');
+          renderBtn.disabled = true;
+        }
+      };
+
+      dropzone.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        dropzone.classList.add('active');
+      });
+
+      dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('active');
+      });
+
+      dropzone.addEventListener('drop', async (event) => {
+        event.preventDefault();
+        dropzone.classList.remove('active');
+        await handleFiles(event.dataTransfer.files);
+      });
+
+      fileInput.addEventListener('change', async (event) => {
+        await handleFiles(event.target.files);
+      });
+
+      applyTextareaBtn.addEventListener('click', () => {
+        const text = jsonTextarea.value.trim();
+
+        if (!text) {
+          setStatus('Paste JSON first.', 'error');
+          renderBtn.disabled = true;
+          return;
+        }
+
+        try {
+          applyJsonText(text, 'pasted-json.json');
+        } catch (error) {
+          setStatus(`Invalid JSON: ${error.message}`, 'error');
+          renderBtn.disabled = true;
+        }
+      });
+
+      jsonTextarea.addEventListener('input', () => {
+        currentJsonText = '';
+        renderBtn.disabled = true;
+        setStatus('Click \"Use pasted JSON\" to validate and enable rendering.');
+      });
+
+      renderBtn.addEventListener('click', async () => {
+        if (!currentJsonText) {
+          return;
+        }
+
+        renderBtn.disabled = true;
+        setStatus('Rendering video... this can take 10-60 seconds.', '');
+
+        try {
+          const response = await fetch('/api/render', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              jsonText: currentJsonText,
+              fileName: currentFileName,
+            }),
+          });
+
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.error || 'Render failed');
+          }
+
+          resultVideo.src = data.videoUrl;
+          downloadLink.href = data.videoUrl;
+          logsEl.textContent = data.logs || 'No logs';
+          resultCard.style.display = 'block';
+          setStatus('Render complete. Your video is ready.', 'success');
+        } catch (error) {
+          setStatus(error.message || String(error), 'error');
+        } finally {
+          renderBtn.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>

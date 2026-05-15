@@ -23,6 +23,26 @@ You will see:
 - `PromoVideo`
 - `Quiz2ChoicesVideo`
 
+## 2b. Drag-and-drop JSON UI (auto render)
+
+If you want a simple UI where you drag a JSON file and get an MP4 automatically:
+
+```bash
+npm run dropzone
+```
+
+Then open:
+
+```txt
+http://localhost:4321
+```
+
+How it works:
+- Paste JSON in the textarea (or drop a `.json` file)
+- Click `Generate video`
+- The server runs `scripts/render.ts` automatically
+- The rendered MP4 appears in the UI and in `out/`
+
 ## 3. Render MP4 automatically
 
 Promo example:
