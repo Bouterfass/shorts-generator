@@ -1,0 +1,29 @@
+{
+  "type": "vocabulary_list",
+  "title": "French Colors 🇫🇷",
+  "difficulty": "beginner",
+  "language": "french",
+  "background": "carou1",
+  "words": [
+    {
+      "word": "Rouge",
+      "translation": "Red"
+    },
+    {
+      "word": "Bleu",
+      "translation": "Blue"
+    },
+    {
+      "word": "Vert",
+      "translation": "Green"
+    },
+    {
+      "word": "Jaune",
+      "translation": "Yellow"
+    },
+    {
+      "word": "Noir",
+      "translation": "Black"
+    }
+  ]
+}

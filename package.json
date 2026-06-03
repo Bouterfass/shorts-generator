@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "render": "tsx scripts/render.ts",
     "render:example": "tsx scripts/render.ts data/promo.example.json",
-    "render:quiz": "tsx scripts/render.ts data/quiz.example.json out/quiz.mp4"
+    "render:quiz": "tsx scripts/render.ts data/quiz.example.json out/quiz.mp4",
+    "render:grammar": "tsx scripts/render.ts data/grammar-spot-error.example.json out/spot-error.mp4",
+    "render:vocabulary": "tsx scripts/render.ts data/vocabulary-list.example.json out/vocabulary-list.mp4 vocabulary_list"
   },
   "dependencies": {
     "@remotion/bundler": "^4.0.0",

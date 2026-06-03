@@ -3,16 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>JSON to Video Generator</title>
+    <title>Shorts Generator</title>
     <style>
       :root {
-        --bg: #0b1220;
-        --panel: #101a30;
-        --text: #e6eefc;
-        --muted: #9db0d0;
-        --line: #2a395b;
-        --ok: #22c55e;
-        --accent: #60a5fa;
+        --bg: #050507;
+        --surface: rgba(12, 13, 18, 0.92);
+        --surface-2: rgba(18, 19, 27, 0.9);
+        --line: rgba(255, 255, 255, 0.12);
+        --line-strong: rgba(255, 255, 255, 0.22);
+        --text: #f4f7fb;
+        --muted: #9aa3b2;
+        --cyan: #18f4ff;
+        --pink: #ff3df2;
+        --lime: #8dff55;
+        --amber: #ffd166;
+        --error: #ff6b8a;
+        --ok: #7dffae;
+        --radius: 8px;
       }
 
       * {
@@ -21,230 +28,1438 @@
 
       body {
         margin: 0;
-        font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
-        background: radial-gradient(circle at 20% 10%, #142646 0%, var(--bg) 50%);
-        color: var(--text);
         min-height: 100vh;
-        padding: 24px;
+        color: var(--text);
+        font-family: 'Space Grotesk', 'Avenir Next', 'Segoe UI', sans-serif;
+        background:
+          linear-gradient(90deg, rgba(24, 244, 255, 0.08) 1px, transparent 1px),
+          linear-gradient(180deg, rgba(255, 61, 242, 0.06) 1px, transparent 1px),
+          linear-gradient(135deg, #050507 0%, #09070d 38%, #101013 100%);
+        background-size: 42px 42px, 42px 42px, auto;
       }
 
-      .container {
-        max-width: 1100px;
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background:
+          linear-gradient(115deg, transparent 0%, rgba(24, 244, 255, 0.14) 24%, transparent 39%),
+          linear-gradient(245deg, transparent 0%, rgba(255, 61, 242, 0.12) 34%, transparent 56%),
+          linear-gradient(0deg, rgba(141, 255, 85, 0.05), transparent 42%);
+        mask-image: linear-gradient(180deg, #000, transparent 86%);
+      }
+
+      .app {
+        width: min(1320px, calc(100vw - 32px));
         margin: 0 auto;
-        display: grid;
-        gap: 18px;
+        padding: 22px 0 36px;
       }
 
-      .card {
-        background: linear-gradient(180deg, rgba(16, 26, 48, 0.92), rgba(11, 18, 32, 0.94));
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        padding: 18px;
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 12px 0 18px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .mark {
+        width: 34px;
+        height: 34px;
+        border: 1px solid rgba(24, 244, 255, 0.44);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(135deg, rgba(24, 244, 255, 0.95), rgba(255, 61, 242, 0.74)),
+          #111;
+        box-shadow:
+          0 0 18px rgba(24, 244, 255, 0.38),
+          0 0 26px rgba(255, 61, 242, 0.22);
       }
 
       h1 {
         margin: 0;
-        font-size: 28px;
+        font-size: 24px;
+        letter-spacing: 0;
       }
 
-      .sub {
-        margin-top: 6px;
+      .subtitle {
+        margin-top: 2px;
         color: var(--muted);
-        font-size: 15px;
-      }
-
-      .dropzone {
-        border: 2px dashed #3f5f94;
-        border-radius: 14px;
-        padding: 26px;
-        text-align: center;
-        background: rgba(20, 32, 56, 0.5);
-        transition: all 0.2s ease;
-      }
-
-      .dropzone.active {
-        border-color: var(--accent);
-        background: rgba(39, 72, 125, 0.25);
-      }
-
-      .btn-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 14px;
-      }
-
-      button,
-      .file-label {
-        border: 1px solid #36507f;
-        background: #1a2a4a;
-        color: var(--text);
-        border-radius: 10px;
-        padding: 10px 14px;
-        font-size: 14px;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-
-      .file-name {
-        margin-top: 12px;
-        color: #c7d5ee;
-        font-size: 14px;
-      }
-
-      textarea {
-        width: 100%;
-        min-height: 260px;
-        margin-top: 12px;
-        border-radius: 12px;
-        border: 1px solid #3a5787;
-        background: rgba(9, 14, 25, 0.9);
-        color: #e8f0ff;
-        padding: 14px;
-        resize: vertical;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-          'Courier New', monospace;
         font-size: 13px;
-        line-height: 1.4;
-      }
-
-      pre {
-        margin: 0;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-        font-size: 13px;
-        color: #d6e4ff;
-        background: rgba(9, 14, 25, 0.9);
-        border: 1px solid #2a3a5d;
-        border-radius: 10px;
-        padding: 12px;
-        max-height: 280px;
-        overflow: auto;
       }
 
       .status {
-        margin-top: 12px;
+        max-width: 460px;
         color: var(--muted);
-      }
-
-      .status.error {
-        color: #fda4af;
+        font-size: 13px;
+        text-align: right;
       }
 
       .status.success {
-        color: #86efac;
+        color: var(--ok);
       }
 
-      video {
-        width: 320px;
-        max-width: 100%;
-        border-radius: 12px;
-        border: 1px solid #355285;
-        background: #000;
+      .status.error {
+        color: var(--error);
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: 270px minmax(0, 1fr);
+        gap: 14px;
+      }
+
+      .sidebar,
+      .stage,
+      .results {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+        box-shadow:
+          0 20px 80px rgba(0, 0, 0, 0.52),
+          inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      }
+
+      .sidebar {
+        padding: 12px;
+        position: sticky;
+        top: 18px;
+        height: max-content;
+      }
+
+      .step {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 32px 1fr;
+        gap: 10px;
+        align-items: center;
+        padding: 11px 10px;
+        border: 1px solid transparent;
+        border-radius: var(--radius);
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .step + .step {
+        margin-top: 8px;
+      }
+
+      .step-index {
+        width: 28px;
+        height: 28px;
+        display: grid;
+        place-items: center;
+        border-radius: 999px;
+        border: 1px solid var(--line-strong);
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .step strong {
+        display: block;
+        color: var(--text);
+        font-size: 14px;
+      }
+
+      .step > span:last-child > span {
+        display: block;
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .step.active {
+        border-color: rgba(24, 244, 255, 0.42);
+        background:
+          linear-gradient(90deg, rgba(24, 244, 255, 0.12), rgba(255, 61, 242, 0.08)),
+          rgba(255, 255, 255, 0.03);
+        box-shadow: 0 0 24px rgba(24, 244, 255, 0.12);
+      }
+
+      .step.complete .step-index {
+        color: #061009;
+        background: var(--lime);
+        border-color: var(--lime);
+      }
+
+      .stage {
+        min-height: 680px;
+        overflow: hidden;
+      }
+
+      .panel {
+        display: none;
+        padding: 24px;
+      }
+
+      .panel.active {
+        display: block;
+      }
+
+      .panel-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 22px;
+        letter-spacing: 0;
+      }
+
+      .panel-note {
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 14px;
+        margin-top: 20px;
+      }
+
+      .choice {
+        min-height: 166px;
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.015)),
+          var(--surface-2);
+        color: var(--text);
+        cursor: pointer;
+        text-align: left;
+        transition: border-color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
+      }
+
+      .choice:hover {
+        transform: translateY(-1px);
+        border-color: rgba(255, 255, 255, 0.34);
+      }
+
+      .choice.selected {
+        border-color: rgba(255, 61, 242, 0.72);
+        box-shadow:
+          0 0 0 1px rgba(24, 244, 255, 0.22),
+          0 0 30px rgba(255, 61, 242, 0.16);
+      }
+
+      .choice-kicker {
+        color: var(--cyan);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      .choice-title {
+        margin-top: 14px;
+        font-size: 23px;
+        font-weight: 800;
+        line-height: 1.08;
+        overflow-wrap: anywhere;
+      }
+
+      .choice-body {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.48;
+        max-width: 30ch;
+      }
+
+      .visual-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 14px;
+        margin-top: 20px;
+      }
+
+      .visual {
+        min-height: 172px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 14px;
+        background: var(--surface-2);
+        color: var(--text);
+        cursor: pointer;
+        text-align: left;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .visual::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--cyan), var(--pink), var(--lime), var(--amber));
+        opacity: 0.32;
+      }
+
+      .visual.selected {
+        border-color: rgba(141, 255, 85, 0.72);
+        box-shadow: 0 0 30px rgba(141, 255, 85, 0.12);
+      }
+
+      .empty-state {
+        border: 1px dashed rgba(255, 255, 255, 0.16);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.035);
+        color: var(--muted);
+        padding: 22px;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .visual-preview {
+        height: 76px;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        margin-bottom: 12px;
+      }
+
+      .preview-json {
+        background:
+          linear-gradient(135deg, rgba(24, 244, 255, 0.18), rgba(255, 61, 242, 0.16)),
+          #121217;
+      }
+
+      .preview-chat {
+        background:
+          linear-gradient(135deg, rgba(8, 18, 12, 0.9), rgba(74, 255, 110, 0.18)),
+          #111;
+      }
+
+      .preview-spot {
+        background:
+          linear-gradient(135deg, rgba(24, 244, 255, 0.22), rgba(255, 209, 102, 0.2)),
+          #111;
+      }
+
+      .preview-carou1 {
+        background:
+          linear-gradient(135deg, rgba(255, 232, 198, 0.92), rgba(122, 241, 255, 0.34)),
+          #f3eadf;
+      }
+
+      .tools {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      button,
+      .file-label,
+      .download-link {
+        appearance: none;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.055);
+        color: var(--text);
+        padding: 10px 13px;
+        font: inherit;
+        font-size: 13px;
+        text-decoration: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+      }
+
+      .step {
+        display: grid;
+        grid-template-columns: 32px minmax(0, 1fr);
+        justify-content: stretch;
+      }
+
+      .choice {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: 0;
+      }
+
+      .visual {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+      }
+
+      button:hover,
+      .file-label:hover,
+      .download-link:hover {
+        transform: translateY(-1px);
+        border-color: rgba(24, 244, 255, 0.58);
+        background: rgba(24, 244, 255, 0.08);
+      }
+
+      button.primary {
+        color: #050507;
+        border-color: transparent;
+        background: linear-gradient(90deg, var(--cyan), var(--pink));
+        font-weight: 800;
+        box-shadow: 0 0 24px rgba(24, 244, 255, 0.2);
+      }
+
+      button.success {
+        color: #061009;
+        border-color: transparent;
+        background: linear-gradient(90deg, var(--lime), var(--amber));
+        font-weight: 800;
+      }
+
+      button:disabled {
+        opacity: 0.48;
+        cursor: not-allowed;
+        transform: none;
       }
 
       #fileInput {
         display: none;
       }
+
+      .dropzone {
+        margin-top: 16px;
+        border: 1px dashed rgba(24, 244, 255, 0.42);
+        border-radius: var(--radius);
+        background: rgba(24, 244, 255, 0.045);
+        padding: 14px;
+      }
+
+      .dropzone.active {
+        border-color: var(--lime);
+        background: rgba(141, 255, 85, 0.075);
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 340px;
+        margin-top: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: var(--radius);
+        background: rgba(5, 5, 7, 0.78);
+        color: #e9f3ff;
+        padding: 14px;
+        resize: vertical;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+          'Courier New', monospace;
+        font-size: 13px;
+        line-height: 1.48;
+        outline: none;
+      }
+
+      textarea:focus {
+        border-color: rgba(255, 61, 242, 0.68);
+        box-shadow: 0 0 0 1px rgba(24, 244, 255, 0.18);
+      }
+
+      .meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .chip {
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.055);
+        color: #dce6f4;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+
+      .preview-box {
+        margin-top: 16px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(0, 0, 0, 0.32);
+        overflow: hidden;
+      }
+
+      .preview-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      pre {
+        margin: 0;
+        max-height: 260px;
+        overflow: auto;
+        padding: 12px;
+        color: #d9efff;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+          'Courier New', monospace;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .summary {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .metric {
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.045);
+      }
+
+      .metric span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .metric strong {
+        display: block;
+        margin-top: 7px;
+        font-size: 18px;
+        overflow-wrap: anywhere;
+      }
+
+      .results {
+        margin-top: 14px;
+        padding: 16px;
+        display: none;
+      }
+
+      .results.visible {
+        display: block;
+      }
+
+      .results-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .results-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 10px;
+      }
+
+      .video-card {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.04);
+        padding: 10px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .video-card video {
+        width: 100%;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.13);
+        background: #000;
+      }
+
+      .video-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        color: #dce6f4;
+        font-size: 12px;
+      }
+
+      .file-name {
+        color: var(--muted);
+        font-size: 11px;
+        overflow-wrap: anywhere;
+      }
+
+      .logs {
+        max-height: 230px;
+        margin-top: 12px;
+      }
+
+      .nav-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 18px;
+        padding-top: 16px;
+        border-top: 1px solid var(--line);
+      }
+
+      @media (max-width: 920px) {
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: static;
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .step + .step {
+          margin-top: 0;
+        }
+
+        .summary {
+          grid-template-columns: 1fr;
+        }
+
+        .panel-head {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .tools {
+          width: 100%;
+        }
+
+        .tools button,
+        .tools .file-label {
+          flex: 1;
+        }
+
+        .topbar {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .status {
+          text-align: left;
+          max-width: none;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .app {
+          width: min(100vw - 20px, 1320px);
+          padding-top: 12px;
+        }
+
+        .sidebar {
+          grid-template-columns: 1fr;
+        }
+
+        .panel {
+          padding: 14px;
+        }
+
+        .grid,
+        .visual-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .choice {
+          min-height: 142px;
+        }
+      }
     </style>
   </head>
   <body>
-    <main class="container">
-      <section class="card">
-        <h1>JSON Video Generator</h1>
-        <div class="sub">
-          Paste your JSON (or drop a file) and generate a video automatically with your Remotion
-          template.
-        </div>
-      </section>
-
-      <section class="card">
-        <div id="dropzone" class="dropzone">
-          <div><strong>Paste your JSON below</strong></div>
-          <div class="sub">You can also drop a .json file here or choose one manually.</div>
-
-          <div class="btn-row" style="justify-content: center; margin-top: 14px">
-            <label class="file-label" for="fileInput">Choose JSON</label>
-            <button id="applyTextareaBtn" type="button">Use pasted JSON</button>
-            <button id="renderBtn" type="button" disabled>Generate video</button>
+    <main class="app">
+      <header class="topbar">
+        <div class="brand">
+          <div class="mark" aria-hidden="true"></div>
+          <div>
+            <h1>Shorts Generator</h1>
+            <div class="subtitle">Remotion render console</div>
           </div>
-
-          <textarea
-            id="jsonTextarea"
-            placeholder='Paste your JSON here, for example:
-{
-  "type": "quiz_2_choices",
-  "title": "Quiz JLPT N5",
-  "questions": [
-    {"word":"사랑","choices":["Love","Food"],"correct":0}
-  ],
-  "cta": "Learn while browsing"
-}'
-          ></textarea>
-
-          <input id="fileInput" type="file" accept=".json,application/json" />
-          <div class="file-name" id="fileName">No file selected</div>
-          <div class="status" id="status">Paste JSON or select a file to continue.</div>
         </div>
+        <div class="status" id="status">Select a video type to start.</div>
+      </header>
+
+      <section class="workspace">
+        <aside class="sidebar" aria-label="Render steps">
+          <button class="step active" data-step-target="1" type="button">
+            <span class="step-index">1</span>
+            <span><strong>Type</strong><span>Video format</span></span>
+          </button>
+          <button class="step" data-step-target="2" type="button">
+            <span class="step-index">2</span>
+            <span><strong>Visual</strong><span>Background</span></span>
+          </button>
+          <button class="step" data-step-target="3" type="button">
+            <span class="step-index">3</span>
+            <span><strong>JSON</strong><span>Input data</span></span>
+          </button>
+          <button class="step" data-step-target="4" type="button">
+            <span class="step-index">4</span>
+            <span><strong>Render</strong><span>MP4 export</span></span>
+          </button>
+        </aside>
+
+        <section class="stage">
+          <article class="panel active" data-step-panel="1">
+            <div class="panel-head">
+              <div>
+                <h2>Video type</h2>
+                <div class="panel-note" id="templateDescription"></div>
+              </div>
+            </div>
+
+            <div class="grid" id="templateGrid"></div>
+
+            <div class="preview-box">
+              <div class="preview-head">
+                <span>Schema</span>
+                <span id="templateNameLabel">quiz_2_choices</span>
+              </div>
+              <pre id="templateFields"></pre>
+            </div>
+
+            <div class="nav-row">
+              <span></span>
+              <button class="primary" data-next-step="2" type="button">Next</button>
+            </div>
+          </article>
+
+          <article class="panel" data-step-panel="2">
+            <div class="panel-head">
+              <div>
+                <h2>Background</h2>
+                <div class="panel-note" id="visualHelp"></div>
+              </div>
+            </div>
+
+            <div class="visual-grid" id="visualGrid"></div>
+
+            <div class="nav-row">
+              <button data-prev-step="1" type="button">Back</button>
+              <button class="primary" data-next-step="3" type="button">Next</button>
+            </div>
+          </article>
+
+          <article class="panel" data-step-panel="3">
+            <div class="panel-head">
+              <div>
+                <h2>JSON</h2>
+                <div class="panel-note">Single object, array, or batch with a videos array.</div>
+              </div>
+              <div class="tools">
+                <button id="loadExampleBtn" type="button">Load example</button>
+                <button id="loadBatchExampleBtn" type="button">Load batch</button>
+                <label class="file-label" for="fileInput">Choose JSON</label>
+                <button id="applyTextareaBtn" type="button">Validate JSON</button>
+              </div>
+            </div>
+
+            <div id="dropzone" class="dropzone">
+              <textarea id="jsonTextarea"></textarea>
+              <input id="fileInput" type="file" accept=".json,application/json" />
+              <div class="meta-row">
+                <div class="chip" id="fileName">No source</div>
+                <div class="chip" id="videoCount">Videos: 0</div>
+                <div class="chip" id="namingHint">Output: title slug</div>
+              </div>
+            </div>
+
+            <div class="preview-box">
+              <div class="preview-head">
+                <span>Normalized JSON</span>
+                <span id="jsonState">waiting</span>
+              </div>
+              <pre id="preview">{}</pre>
+            </div>
+
+            <div class="nav-row">
+              <button data-prev-step="2" type="button">Back</button>
+              <button class="primary" id="jsonNextBtn" data-next-step="4" type="button" disabled>
+                Next
+              </button>
+            </div>
+          </article>
+
+          <article class="panel" data-step-panel="4">
+            <div class="panel-head">
+              <div>
+                <h2>Generate</h2>
+                <div class="panel-note">MP4 names are generated from each video title.</div>
+              </div>
+              <div class="tools">
+                <button class="success" id="renderBtn" type="button" disabled>Generate video(s)</button>
+              </div>
+            </div>
+
+            <div class="summary">
+              <div class="metric">
+                <span>Template</span>
+                <strong id="summaryTemplate">Quiz 2 choices</strong>
+              </div>
+              <div class="metric">
+                <span>Background</span>
+                <strong id="summaryVisual">No preset</strong>
+              </div>
+              <div class="metric">
+                <span>Videos</span>
+                <strong id="summaryCount">0</strong>
+              </div>
+            </div>
+
+            <div class="preview-box">
+              <div class="preview-head">
+                <span>JSON sent to renderer</span>
+                <span>slug output</span>
+              </div>
+              <pre id="renderPreview">{}</pre>
+            </div>
+
+            <div class="nav-row">
+              <button data-prev-step="3" type="button">Back</button>
+              <span></span>
+            </div>
+          </article>
+        </section>
       </section>
 
-      <section class="card">
-        <h3 style="margin-top: 0">JSON Preview</h3>
-        <pre id="preview">{}</pre>
-      </section>
-
-      <section class="card" id="resultCard" style="display: none">
-        <h3 style="margin-top: 0">Rendered Video</h3>
-        <video id="resultVideo" controls></video>
-        <div class="btn-row" style="margin-top: 12px">
-          <a id="downloadLink" class="file-label" href="#" download>Download MP4</a>
+      <section class="results" id="resultCard">
+        <div class="results-head">
+          <h2>Rendered videos</h2>
+          <button id="downloadAllBtn" type="button" disabled>Download all</button>
         </div>
-        <pre id="logs" style="margin-top: 12px"></pre>
+        <div id="resultsGrid" class="results-grid"></div>
+        <pre id="logs" class="logs"></pre>
       </section>
     </main>
 
     <script>
+      const TEMPLATE_CONFIG = {
+        quiz_2_choices: {
+          label: 'Quiz 2 choices',
+          kicker: 'Interactive',
+          description: 'Two-choice quiz with delayed answer reveal.',
+          fields: [
+            'Required: title, questions[{word, choices[2], correct}], cta',
+            'Optional: accentColor',
+            'Batch: { "videos": [ {...quiz1}, {...quiz2} ] }',
+          ],
+          singleExample: {
+            title: 'Quiz JLPT N5',
+            questions: [
+              {word: '사랑', choices: ['Love', 'Food'], correct: 0},
+              {word: '晚安', choices: ['Good night', 'Hello'], correct: 0},
+            ],
+            cta: 'Learn while browsing',
+          },
+          batchExample: {
+            videos: [
+              {
+                title: 'Quiz 1',
+                questions: [
+                  {word: '사랑', choices: ['Love', 'Food'], correct: 0},
+                  {word: 'coeur', choices: ['Heart', 'Chair'], correct: 0},
+                ],
+                cta: 'Learn while browsing',
+              },
+              {
+                title: 'Quiz 2',
+                questions: [
+                  {word: '晚安', choices: ['Good night', 'Hello'], correct: 0},
+                  {word: 'libro', choices: ['Book', 'Window'], correct: 0},
+                ],
+                cta: 'Keep learning daily',
+              },
+            ],
+          },
+          placeholder: '{\n  "title": "Quiz JLPT N5",\n  "questions": [\n    {"word":"사랑","choices":["Love","Food"],"correct":0},\n    {"word":"晚安","choices":["Good night","Hello"],"correct":0}\n  ],\n  "cta": "Learn while browsing"\n}',
+        },
+        vocabulary_list: {
+          label: 'Vocabulary list',
+          kicker: 'TTS',
+          description: 'Animated word to translation list with generated voice.',
+          fields: [
+            'Required: title, words[{word, translation}]',
+            'Optional: language, difficulty, backgroundImagePath',
+            'Batch: { "videos": [ {...vocab1}, {...vocab2} ] }',
+          ],
+          singleExample: {
+            type: 'vocabulary_list',
+            title: 'French Colors 🇫🇷',
+            difficulty: 'beginner',
+            language: 'french',
+            background: 'carou1',
+            words: [
+              {word: 'Rouge', translation: 'Red'},
+              {word: 'Bleu', translation: 'Blue'},
+              {word: 'Vert', translation: 'Green'},
+              {word: 'Jaune', translation: 'Yellow'},
+              {word: 'Noir', translation: 'Black'},
+            ],
+          },
+          batchExample: {
+            defaultTemplate: 'vocabulary_list',
+            videos: [
+              {
+                title: 'French Colors 🇫🇷',
+                language: 'french',
+                background: 'carou1',
+                words: [
+                  {word: 'Rouge', translation: 'Red'},
+                  {word: 'Bleu', translation: 'Blue'},
+                  {word: 'Vert', translation: 'Green'},
+                ],
+              },
+              {
+                title: 'French Food 🇫🇷',
+                language: 'french',
+                background: 'carou1',
+                words: [
+                  {word: 'Pain', translation: 'Bread'},
+                  {word: 'Lait', translation: 'Milk'},
+                  {word: 'Pomme', translation: 'Apple'},
+                ],
+              },
+            ],
+          },
+          placeholder: '{\n  "type": "vocabulary_list",\n  "title": "French Colors 🇫🇷",\n  "difficulty": "beginner",\n  "language": "french",\n  "background": "carou1",\n  "words": [\n    {"word":"Rouge","translation":"Red"},\n    {"word":"Bleu","translation":"Blue"},\n    {"word":"Vert","translation":"Green"}\n  ]\n}',
+        },
+        spot_error: {
+          label: 'Spot error',
+          kicker: 'Grammar',
+          description: 'Grammar challenge with no answer reveal.',
+          fields: [
+            'Required: hook, sentence, cta',
+            'Optional: language, title, backgroundVideoPath, musicPath',
+            'Batch: { "videos": [ {...spot1}, {...spot2} ] }',
+          ],
+          singleExample: {
+            language: 'en',
+            hook: "You're B2 if you can spot the mistake 👇",
+            sentence: 'I am agree with you.',
+            cta: 'Can you fix it?',
+          },
+          batchExample: {
+            videos: [
+              {
+                language: 'ko',
+                hook: "You're B2 if you can spot the mistake 👇",
+                sentence: 'I am agree with you.',
+                cta: 'Can you fix it?',
+              },
+              {
+                language: 'fr',
+                hook: 'Only advanced learners catch this 👇',
+                sentence: 'She suggested me to study harder.',
+                cta: 'Write the correction in comments.',
+              },
+            ],
+          },
+          placeholder: '{\n  "language": "fr",\n  "hook": "You\'re B2 if you can spot the mistake 👇",\n  "sentence": "I am agree with you.",\n  "cta": "Can you fix it?"\n}',
+        },
+      };
+
+      const VISUAL_PRESETS = {
+        chat_background: {
+          label: 'chat_background.mp4',
+          body: 'Embedded audio',
+          className: 'preview-chat',
+          targets: ['spot_error', 'grammar_mistake'],
+          patch: {
+            backgroundVideoPath: 'backgrounds/chat_background.mp4',
+            musicPath: null,
+          },
+        },
+        bgspoterror: {
+          label: 'bgspoterror.mp4',
+          body: 'Adds chillsound.mp3',
+          className: 'preview-spot',
+          targets: ['spot_error', 'grammar_mistake'],
+          patch: {
+            backgroundVideoPath: 'backgrounds/bgspoterror.mp4',
+            musicPath: 'audio/chillsound.mp3',
+          },
+        },
+        carou1: {
+          label: 'carou1.jpg',
+          body: 'Vocabulary light visual',
+          className: 'preview-carou1',
+          targets: ['vocabulary_list'],
+          patch: {
+            background: 'carou1',
+            backgroundImagePath: 'backgrounds/carou1.jpg',
+          },
+        },
+      };
+
+      const templateGrid = document.getElementById('templateGrid');
+      const visualGrid = document.getElementById('visualGrid');
       const dropzone = document.getElementById('dropzone');
       const fileInput = document.getElementById('fileInput');
       const applyTextareaBtn = document.getElementById('applyTextareaBtn');
       const jsonTextarea = document.getElementById('jsonTextarea');
       const renderBtn = document.getElementById('renderBtn');
+      const jsonNextBtn = document.getElementById('jsonNextBtn');
+      const loadExampleBtn = document.getElementById('loadExampleBtn');
+      const loadBatchExampleBtn = document.getElementById('loadBatchExampleBtn');
+      const visualHelp = document.getElementById('visualHelp');
+      const templateDescription = document.getElementById('templateDescription');
+      const templateFields = document.getElementById('templateFields');
+      const templateNameLabel = document.getElementById('templateNameLabel');
       const fileNameEl = document.getElementById('fileName');
+      const videoCountEl = document.getElementById('videoCount');
       const previewEl = document.getElementById('preview');
+      const renderPreviewEl = document.getElementById('renderPreview');
+      const jsonStateEl = document.getElementById('jsonState');
       const statusEl = document.getElementById('status');
       const resultCard = document.getElementById('resultCard');
-      const resultVideo = document.getElementById('resultVideo');
-      const downloadLink = document.getElementById('downloadLink');
+      const resultsGrid = document.getElementById('resultsGrid');
       const logsEl = document.getElementById('logs');
+      const downloadAllBtn = document.getElementById('downloadAllBtn');
+      const summaryTemplate = document.getElementById('summaryTemplate');
+      const summaryVisual = document.getElementById('summaryVisual');
+      const summaryCount = document.getElementById('summaryCount');
 
+      let selectedTemplate = 'quiz_2_choices';
+      let selectedVisual = '';
+      let currentStep = 1;
       let currentJsonText = '';
       let currentFileName = '';
+      let currentVideoCount = 0;
+      let renderedVideos = [];
 
       const setStatus = (message, tone = '') => {
         statusEl.textContent = message;
         statusEl.className = `status ${tone}`.trim();
       };
 
-      const applyJsonText = (text, sourceName) => {
-        JSON.parse(text);
+      const isObject = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 
-        currentJsonText = text;
+      const parseJsonInput = (text) => {
+        try {
+          return JSON.parse(text);
+        } catch (primaryError) {
+          const maybeConcatenated = text.trim().replace(/}\s*{/g, '},{');
+          try {
+            return JSON.parse(`[${maybeConcatenated}]`);
+          } catch {
+            throw primaryError;
+          }
+        }
+      };
+
+      const parseTemplateChoice = (value) => {
+        if (typeof value !== 'string') {
+          return 'auto';
+        }
+
+        const normalized = value.trim().toLowerCase();
+        return TEMPLATE_CONFIG[normalized] ? normalized : 'auto';
+      };
+
+      const guessTemplateFromPayload = (payload) => {
+        if (!isObject(payload)) {
+          return 'auto';
+        }
+
+        const byType = parseTemplateChoice(payload.type);
+        if (byType !== 'auto') {
+          return byType;
+        }
+
+        const title = typeof payload.title === 'string' ? payload.title.trim().toLowerCase() : '';
+        return title === 'spot_error' ? 'spot_error' : 'auto';
+      };
+
+      const isPresetSupportedForTemplate = (presetId, templateType) => {
+        if (!presetId) {
+          return false;
+        }
+
+        const preset = VISUAL_PRESETS[presetId];
+        return Boolean(preset && preset.targets.includes(templateType));
+      };
+
+      const applyVisualPresetPatch = (payload, presetId, resolvedTemplateType) => {
+        if (!isObject(payload) || !presetId) {
+          return payload;
+        }
+
+        if (!isPresetSupportedForTemplate(presetId, resolvedTemplateType)) {
+          return payload;
+        }
+
+        return {
+          ...payload,
+          ...VISUAL_PRESETS[presetId].patch,
+        };
+      };
+
+      const shouldPatchVisual = (templateType) =>
+        templateType === 'spot_error' ||
+        templateType === 'grammar_mistake' ||
+        templateType === 'vocabulary_list';
+
+      const applyTemplateVisualPreset = (jsonValue) => {
+        const applyForPayload = (payload, resolvedTemplateType) => {
+          if (!isObject(payload)) {
+            return payload;
+          }
+
+          const finalTemplateType =
+            resolvedTemplateType !== 'auto' ? resolvedTemplateType : guessTemplateFromPayload(payload);
+
+          if (!shouldPatchVisual(finalTemplateType)) {
+            return payload;
+          }
+
+          return applyVisualPresetPatch(payload, selectedVisual, finalTemplateType);
+        };
+
+        if (Array.isArray(jsonValue)) {
+          return jsonValue.map((entry) => {
+            if (isObject(entry) && isObject(entry.data)) {
+              const entryTemplate =
+                parseTemplateChoice(entry.template) !== 'auto'
+                  ? parseTemplateChoice(entry.template)
+                  : selectedTemplate;
+
+              return {
+                ...entry,
+                data: applyForPayload(entry.data, entryTemplate),
+              };
+            }
+
+            return applyForPayload(entry, selectedTemplate);
+          });
+        }
+
+        if (!isObject(jsonValue)) {
+          return jsonValue;
+        }
+
+        const rootDefaultTemplate = parseTemplateChoice(
+          jsonValue.defaultTemplate ?? jsonValue.batchTemplate,
+        );
+
+        if (Array.isArray(jsonValue.videos)) {
+          const inheritedTemplate =
+            selectedTemplate !== 'auto' ? selectedTemplate : rootDefaultTemplate;
+
+          return {
+            ...jsonValue,
+            videos: jsonValue.videos.map((entry) => {
+              if (!isObject(entry)) {
+                return entry;
+              }
+
+              if (isObject(entry.data)) {
+                const entryTemplate =
+                  parseTemplateChoice(entry.template) !== 'auto'
+                    ? parseTemplateChoice(entry.template)
+                    : inheritedTemplate;
+
+                return {
+                  ...entry,
+                  data: applyForPayload(entry.data, entryTemplate),
+                };
+              }
+
+              return applyForPayload(entry, inheritedTemplate);
+            }),
+          };
+        }
+
+        return applyForPayload(jsonValue, selectedTemplate);
+      };
+
+      const forceTypeOnVideoObject = (obj, templateType) => {
+        if (templateType === 'auto') {
+          return obj;
+        }
+
+        const typeValue =
+          templateType === 'spot_error'
+            ? 'spot_error'
+            : templateType === 'quiz_2_choices'
+              ? 'quiz_2_choices'
+              : templateType === 'vocabulary_list'
+                ? 'vocabulary_list'
+                : templateType === 'grammar_mistake'
+                  ? 'grammar_mistake'
+                  : 'promo';
+
+        return {...obj, type: typeValue};
+      };
+
+      const normalizeForTemplate = (parsedJson) => {
+        if (selectedTemplate === 'auto') {
+          return parsedJson;
+        }
+
+        const normalizeEntry = (entry, index) => {
+          if (!isObject(entry)) {
+            throw new Error(`Entry at index ${index} must be an object.`);
+          }
+
+          if (isObject(entry.data)) {
+            return {...entry, data: forceTypeOnVideoObject(entry.data, selectedTemplate)};
+          }
+
+          return forceTypeOnVideoObject(entry, selectedTemplate);
+        };
+
+        if (Array.isArray(parsedJson)) {
+          return parsedJson.map((entry, index) => normalizeEntry(entry, index));
+        }
+
+        if (!isObject(parsedJson)) {
+          throw new Error('JSON root must be an object or an array.');
+        }
+
+        if (Array.isArray(parsedJson.videos)) {
+          return {
+            ...parsedJson,
+            videos: parsedJson.videos.map((entry, index) => normalizeEntry(entry, index)),
+          };
+        }
+
+        return forceTypeOnVideoObject(parsedJson, selectedTemplate);
+      };
+
+      const countVideos = (parsedJson) => {
+        if (Array.isArray(parsedJson)) {
+          return parsedJson.length;
+        }
+
+        if (isObject(parsedJson) && Array.isArray(parsedJson.videos)) {
+          return parsedJson.videos.length;
+        }
+
+        return 1;
+      };
+
+      const showStep = (step) => {
+        currentStep = step;
+        document.querySelectorAll('[data-step-panel]').forEach((panel) => {
+          panel.classList.toggle('active', Number(panel.dataset.stepPanel) === step);
+        });
+        document.querySelectorAll('[data-step-target]').forEach((item) => {
+          const itemStep = Number(item.dataset.stepTarget);
+          item.classList.toggle('active', itemStep === step);
+          item.classList.toggle('complete', itemStep < step);
+        });
+      };
+
+      const resetResults = () => {
+        renderedVideos = [];
+        resultCard.classList.remove('visible');
+        resultsGrid.innerHTML = '';
+        logsEl.textContent = '';
+        downloadAllBtn.disabled = true;
+      };
+
+      const refreshSummaries = () => {
+        summaryTemplate.textContent = TEMPLATE_CONFIG[selectedTemplate].label;
+        summaryVisual.textContent = selectedVisual
+          ? VISUAL_PRESETS[selectedVisual].label
+          : 'No preset';
+        summaryCount.textContent = String(currentVideoCount);
+        renderPreviewEl.textContent = currentJsonText || '{}';
+      };
+
+      const refreshTemplateUI = ({resetJson = false} = {}) => {
+        const template = TEMPLATE_CONFIG[selectedTemplate];
+        templateDescription.textContent = template.description;
+        templateFields.textContent = template.fields.join('\n');
+        templateNameLabel.textContent = selectedTemplate;
+        jsonTextarea.placeholder = template.placeholder;
+
+        document.querySelectorAll('[data-template-choice]').forEach((button) => {
+          button.classList.toggle('selected', button.dataset.templateChoice === selectedTemplate);
+        });
+
+        refreshVisualUI();
+
+        if (resetJson) {
+          currentJsonText = '';
+          currentFileName = '';
+          currentVideoCount = 0;
+          fileNameEl.textContent = 'No source';
+          videoCountEl.textContent = 'Videos: 0';
+          previewEl.textContent = '{}';
+          renderPreviewEl.textContent = '{}';
+          jsonStateEl.textContent = 'waiting';
+          renderBtn.disabled = true;
+          jsonNextBtn.disabled = true;
+          resetResults();
+          setStatus('Template selected. Choose a visual preset.');
+        }
+
+        refreshSummaries();
+      };
+
+      const refreshVisualUI = () => {
+        visualGrid.innerHTML = '';
+
+        const options = Object.entries(VISUAL_PRESETS).filter(([, preset]) =>
+          preset.targets.includes(selectedTemplate),
+        );
+
+        if (options.length === 0) {
+          selectedVisual = '';
+          visualGrid.innerHTML =
+            '<div class="empty-state">No background preset is available for this template. The visual setup is handled by the JSON/template itself.</div>';
+          visualHelp.textContent = 'No background selection needed for this video type.';
+          refreshSummaries();
+          return;
+        }
+
+        if (!options.some(([key]) => key === selectedVisual)) {
+          selectedVisual = options[0][0];
+        }
+
+        options.forEach(([key, preset]) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = `visual ${key === selectedVisual ? 'selected' : ''}`;
+          button.dataset.visualChoice = key;
+          button.innerHTML = `
+            <div class="visual-preview ${preset.className}"></div>
+            <div class="choice-kicker">Preset</div>
+            <div class="choice-title">${preset.label}</div>
+            <div class="choice-body">${preset.body}</div>
+          `;
+          visualGrid.appendChild(button);
+        });
+
+        visualHelp.textContent =
+          'Preset values are applied to compatible JSON entries.';
+
+        document.querySelectorAll('[data-visual-choice]').forEach((button) => {
+          button.addEventListener('click', () => {
+            selectedVisual = button.dataset.visualChoice;
+            refreshVisualUI();
+            if (jsonTextarea.value.trim()) {
+              try {
+                applyJsonText(jsonTextarea.value.trim(), currentFileName || 'pasted-json.json');
+              } catch {
+                currentJsonText = '';
+                jsonNextBtn.disabled = true;
+                renderBtn.disabled = true;
+              }
+            }
+            refreshSummaries();
+          });
+        });
+      };
+
+      const applyJsonText = (text, sourceName) => {
+        const parsedJson = parseJsonInput(text);
+        const normalizedJson = normalizeForTemplate(parsedJson);
+        const withVisualPreset = applyTemplateVisualPreset(normalizedJson);
+        const normalizedJsonText = JSON.stringify(withVisualPreset, null, 2);
+
+        currentJsonText = normalizedJsonText;
         currentFileName = sourceName;
+        currentVideoCount = countVideos(withVisualPreset);
 
         fileNameEl.textContent = `Source: ${sourceName}`;
-        previewEl.textContent = text;
-        jsonTextarea.value = text;
+        videoCountEl.textContent = `Videos: ${currentVideoCount}`;
+        previewEl.textContent = normalizedJsonText;
+        renderPreviewEl.textContent = normalizedJsonText;
+        jsonTextarea.value = normalizedJsonText;
+        jsonStateEl.textContent = 'valid';
         renderBtn.disabled = false;
-        resultCard.style.display = 'none';
-        setStatus('JSON loaded. Ready to render.');
+        jsonNextBtn.disabled = false;
+        resetResults();
+        refreshSummaries();
+        setStatus(`JSON ready: ${currentVideoCount} video${currentVideoCount > 1 ? 's' : ''}.`, 'success');
+      };
+
+      const renderTemplateChoices = () => {
+        templateGrid.innerHTML = '';
+        Object.entries(TEMPLATE_CONFIG).forEach(([key, template]) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = `choice ${key === selectedTemplate ? 'selected' : ''}`;
+          button.dataset.templateChoice = key;
+          button.innerHTML = `
+            <div class="choice-kicker">${template.kicker}</div>
+            <div class="choice-title">${template.label}</div>
+            <div class="choice-body">${template.description}</div>
+          `;
+          templateGrid.appendChild(button);
+        });
+
+        document.querySelectorAll('[data-template-choice]').forEach((button) => {
+          button.addEventListener('click', () => {
+            selectedTemplate = button.dataset.templateChoice;
+            selectedVisual = '';
+            refreshTemplateUI({resetJson: true});
+          });
+        });
+      };
+
+      const renderResults = (videos, fallbackLogs = '') => {
+        renderedVideos = videos;
+        resultsGrid.innerHTML = '';
+
+        videos.forEach((video, idx) => {
+          const card = document.createElement('article');
+          card.className = 'video-card';
+
+          const templateLabel = video.templateType || 'auto';
+          const fileName = video.fileName || video.videoUrl.split('/').pop() || 'video.mp4';
+
+          const head = document.createElement('div');
+          head.className = 'video-head';
+          head.innerHTML = `<span>Video ${idx + 1}</span><span>${templateLabel}</span>`;
+
+          const outputFile = document.createElement('div');
+          outputFile.className = 'file-name';
+          outputFile.textContent = fileName;
+
+          const videoEl = document.createElement('video');
+          videoEl.controls = true;
+          videoEl.src = video.videoUrl;
+
+          const download = document.createElement('a');
+          download.className = 'download-link';
+          download.href = video.videoUrl;
+          download.download = fileName;
+          download.textContent = 'Download MP4';
+
+          card.appendChild(head);
+          card.appendChild(outputFile);
+          card.appendChild(videoEl);
+          card.appendChild(download);
+          resultsGrid.appendChild(card);
+        });
+
+        logsEl.textContent = fallbackLogs || videos.map((v) => v.logs || '').join('\n\n');
+        resultCard.classList.add('visible');
+        downloadAllBtn.disabled = videos.length === 0;
       };
 
       const readFile = async (file) => {
@@ -262,9 +1477,28 @@
           await readFile(file);
         } catch (error) {
           setStatus(`Invalid JSON: ${error.message}`, 'error');
+          jsonNextBtn.disabled = true;
           renderBtn.disabled = true;
         }
       };
+
+      loadExampleBtn.addEventListener('click', () => {
+        const text = JSON.stringify(TEMPLATE_CONFIG[selectedTemplate].singleExample, null, 2);
+        try {
+          applyJsonText(text, `${selectedTemplate}-single-example.json`);
+        } catch (error) {
+          setStatus(`Invalid example JSON: ${error.message}`, 'error');
+        }
+      });
+
+      loadBatchExampleBtn.addEventListener('click', () => {
+        const text = JSON.stringify(TEMPLATE_CONFIG[selectedTemplate].batchExample, null, 2);
+        try {
+          applyJsonText(text, `${selectedTemplate}-batch-example.json`);
+        } catch (error) {
+          setStatus(`Invalid batch JSON: ${error.message}`, 'error');
+        }
+      });
 
       dropzone.addEventListener('dragover', (event) => {
         event.preventDefault();
@@ -290,7 +1524,6 @@
 
         if (!text) {
           setStatus('Paste JSON first.', 'error');
-          renderBtn.disabled = true;
           return;
         }
 
@@ -298,14 +1531,18 @@
           applyJsonText(text, 'pasted-json.json');
         } catch (error) {
           setStatus(`Invalid JSON: ${error.message}`, 'error');
+          jsonStateEl.textContent = 'invalid';
+          jsonNextBtn.disabled = true;
           renderBtn.disabled = true;
         }
       });
 
       jsonTextarea.addEventListener('input', () => {
         currentJsonText = '';
+        jsonStateEl.textContent = 'edited';
         renderBtn.disabled = true;
-        setStatus('Click \"Use pasted JSON\" to validate and enable rendering.');
+        jsonNextBtn.disabled = true;
+        setStatus('Validate JSON before rendering.');
       });
 
       renderBtn.addEventListener('click', async () => {
@@ -314,7 +1551,8 @@
         }
 
         renderBtn.disabled = true;
-        setStatus('Rendering video... this can take 10-60 seconds.', '');
+        resetResults();
+        setStatus(`Rendering ${currentVideoCount} video${currentVideoCount > 1 ? 's' : ''}...`);
 
         try {
           const response = await fetch('/api/render', {
@@ -323,6 +1561,7 @@
             body: JSON.stringify({
               jsonText: currentJsonText,
               fileName: currentFileName,
+              templateType: selectedTemplate,
             }),
           });
 
@@ -331,17 +1570,64 @@
             throw new Error(data.error || 'Render failed');
           }
 
-          resultVideo.src = data.videoUrl;
-          downloadLink.href = data.videoUrl;
-          logsEl.textContent = data.logs || 'No logs';
-          resultCard.style.display = 'block';
-          setStatus('Render complete. Your video is ready.', 'success');
+          const videos = Array.isArray(data.videos)
+            ? data.videos
+            : data.videoUrl
+              ? [
+                  {
+                    videoUrl: data.videoUrl,
+                    logs: data.logs || '',
+                    templateType: data.templateType || selectedTemplate,
+                    fileName: data.videoUrl.split('/').pop() || 'video.mp4',
+                  },
+                ]
+              : [];
+
+          if (videos.length === 0) {
+            throw new Error('No rendered videos were returned by the server.');
+          }
+
+          renderResults(videos, data.logs || '');
+          const firstOutput = videos[0]?.fileName || videos[0]?.videoUrl?.split('/').pop() || '';
+          setStatus(
+            `Render complete: ${videos.length} video${videos.length > 1 ? 's' : ''}. ${firstOutput}`,
+            'success',
+          );
         } catch (error) {
           setStatus(error.message || String(error), 'error');
         } finally {
           renderBtn.disabled = false;
         }
       });
+
+      downloadAllBtn.addEventListener('click', () => {
+        renderedVideos.forEach((video, index) => {
+          window.setTimeout(() => {
+            const link = document.createElement('a');
+            link.href = video.videoUrl;
+            link.download = video.fileName || video.videoUrl.split('/').pop() || `video-${index + 1}.mp4`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+          }, index * 250);
+        });
+      });
+
+      document.querySelectorAll('[data-step-target]').forEach((button) => {
+        button.addEventListener('click', () => showStep(Number(button.dataset.stepTarget)));
+      });
+
+      document.querySelectorAll('[data-next-step]').forEach((button) => {
+        button.addEventListener('click', () => showStep(Number(button.dataset.nextStep)));
+      });
+
+      document.querySelectorAll('[data-prev-step]').forEach((button) => {
+        button.addEventListener('click', () => showStep(Number(button.dataset.prevStep)));
+      });
+
+      renderTemplateChoices();
+      refreshTemplateUI();
+      showStep(1);
     </script>
   </body>
 </html>

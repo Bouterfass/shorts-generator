@@ -22,6 +22,205 @@ const port = Number(process.env.PORT ?? 4321);
 
 let renderInProgress = false;
 
+type TemplateChoice =
+  | 'auto'
+  | 'promo'
+  | 'quiz_2_choices'
+  | 'grammar_mistake'
+  | 'spot_error'
+  | 'vocabulary_list';
+
+type RenderJob = {
+  templateType: TemplateChoice;
+  inputObject: Record<string, unknown>;
+  index: number;
+  outputNameBase?: string;
+};
+
+type RenderResult = {
+  index: number;
+  templateType: TemplateChoice;
+  videoUrl: string;
+  outputPath: string;
+  fileName: string;
+  logs: string;
+};
+
+type OutputNameConfig = {
+  baseName: string;
+  custom: boolean;
+};
+
+const parseTemplateChoice = (value: unknown): TemplateChoice => {
+  if (typeof value !== 'string') {
+    return 'auto';
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  if (
+    normalized === 'auto' ||
+    normalized === 'promo' ||
+    normalized === 'quiz_2_choices' ||
+    normalized === 'grammar_mistake' ||
+    normalized === 'spot_error' ||
+    normalized === 'vocabulary_list'
+  ) {
+    return normalized;
+  }
+
+  return 'auto';
+};
+
+const guessTemplateFromObject = (obj: Record<string, unknown>): TemplateChoice => {
+  const typeValue = parseTemplateChoice(obj.type);
+  if (typeValue !== 'auto') {
+    return typeValue;
+  }
+
+  const titleValue =
+    typeof obj.title === 'string' ? obj.title.trim().toLowerCase() : '';
+
+  if (titleValue === 'spot_error') {
+    return 'spot_error';
+  }
+
+  return 'auto';
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+};
+
+const parseInputJson = (raw: string): unknown => {
+  try {
+    return JSON.parse(raw) as unknown;
+  } catch {
+    const maybeConcatenated = raw.trim().replace(/}\s*{/g, '},{');
+    try {
+      return JSON.parse(`[${maybeConcatenated}]`) as unknown;
+    } catch {
+      throw new Error(
+        'Invalid JSON input. Provide a valid JSON object, array, or a batch object with a videos array.',
+      );
+    }
+  }
+};
+
+const forceTemplateTypeOnObject = (
+  inputObject: Record<string, unknown>,
+  templateType: TemplateChoice,
+): Record<string, unknown> => {
+  if (templateType === 'auto') {
+    return inputObject;
+  }
+
+  if (templateType === 'promo') {
+    return {...inputObject, type: 'promo'};
+  }
+
+  if (templateType === 'quiz_2_choices') {
+    return {...inputObject, type: 'quiz_2_choices'};
+  }
+
+  if (templateType === 'grammar_mistake') {
+    return {...inputObject, type: 'grammar_mistake'};
+  }
+
+  if (templateType === 'vocabulary_list') {
+    return {...inputObject, type: 'vocabulary_list'};
+  }
+
+  return {...inputObject, type: 'spot_error'};
+};
+
+const readBatchDefaultTemplate = (root: Record<string, unknown>): TemplateChoice => {
+  const byDefaultTemplate = parseTemplateChoice(root.defaultTemplate);
+  if (byDefaultTemplate !== 'auto') {
+    return byDefaultTemplate;
+  }
+
+  const byBatchTemplate = parseTemplateChoice(root.batchTemplate);
+  if (byBatchTemplate !== 'auto') {
+    return byBatchTemplate;
+  }
+
+  return 'auto';
+};
+
+const extractJobsFromParsedJson = (
+  parsed: unknown,
+  requestedTemplateType: TemplateChoice,
+): RenderJob[] => {
+  const buildJob = (
+    rawEntry: unknown,
+    index: number,
+    inheritedTemplateType: TemplateChoice,
+  ): RenderJob => {
+    if (!isRecord(rawEntry)) {
+      throw new Error(`Invalid entry at index ${index}. Each video entry must be an object.`);
+    }
+
+    const payload = isRecord(rawEntry.data) ? rawEntry.data : rawEntry;
+    if (!isRecord(payload)) {
+      throw new Error(`Invalid entry at index ${index}. "data" must be an object.`);
+    }
+
+    const entryTemplate = parseTemplateChoice(rawEntry.template);
+    const payloadTemplate = guessTemplateFromObject(payload);
+
+    const resolvedTemplateType =
+      requestedTemplateType !== 'auto'
+        ? requestedTemplateType
+        : entryTemplate !== 'auto'
+          ? entryTemplate
+          : payloadTemplate !== 'auto'
+            ? payloadTemplate
+            : inheritedTemplateType;
+
+    const entryOutputNameConfig = parseOutputNameConfig(
+      getMaybeValue(rawEntry, ['outputName', 'name']) ??
+        getMaybeValue(payload, ['outputName', 'name']),
+    );
+
+    return {
+      index,
+      templateType: resolvedTemplateType,
+      inputObject: forceTemplateTypeOnObject(payload, resolvedTemplateType),
+      outputNameBase: entryOutputNameConfig.custom
+        ? entryOutputNameConfig.baseName
+        : slugify(deriveVideoTitle(payload, resolvedTemplateType)),
+    };
+  };
+
+  if (Array.isArray(parsed)) {
+    if (parsed.length === 0) {
+      throw new Error('JSON array is empty. Add at least one video object.');
+    }
+
+    return parsed.map((entry, index) => buildJob(entry, index, 'auto'));
+  }
+
+  if (!isRecord(parsed)) {
+    throw new Error('Input must be a JSON object, an array, or a batch object.');
+  }
+
+  const maybeVideos = parsed.videos;
+  if (Array.isArray(maybeVideos)) {
+    if (maybeVideos.length === 0) {
+      throw new Error('"videos" is empty. Add at least one video object.');
+    }
+
+    const batchDefaultTemplate = readBatchDefaultTemplate(parsed);
+
+    return maybeVideos.map((entry, index) =>
+      buildJob(entry, index, batchDefaultTemplate),
+    );
+  }
+
+  return [buildJob(parsed, 0, 'auto')];
+};
+
 const sendJson = (
   res: ServerResponse,
   statusCode: number,
@@ -32,15 +231,84 @@ const sendJson = (
   res.end(JSON.stringify(payload));
 };
 
+const slugify = (value: string): string => {
+  return (
+    value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 54) || 'video'
+  );
+};
+
 const safeBasename = (fileName: string): string => {
   const base = path.basename(fileName || 'input');
   const withoutExt = base.replace(/\.[^.]+$/, '');
 
-  return withoutExt
-    .toLowerCase()
-    .replace(/[^a-z0-9-_]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 40) || 'input';
+  return slugify(withoutExt);
+};
+
+const deriveVideoTitle = (
+  payload: Record<string, unknown>,
+  templateType: TemplateChoice,
+): string => {
+  const title = getMaybeValue(payload, ['title']);
+  if (typeof title === 'string' && title.trim()) {
+    return title;
+  }
+
+  if (templateType === 'promo') {
+    const hookText = getMaybeValue(payload, ['hookText']);
+    if (typeof hookText === 'string' && hookText.trim()) {
+      return hookText;
+    }
+  }
+
+  if (templateType === 'spot_error' || templateType === 'grammar_mistake') {
+    const sentence = getMaybeValue(payload, ['sentence']);
+    if (typeof sentence === 'string' && sentence.trim()) {
+      return sentence;
+    }
+  }
+
+  const cta = getMaybeValue(payload, ['cta', 'ctaText']);
+  if (typeof cta === 'string' && cta.trim()) {
+    return cta;
+  }
+
+  return 'video';
+};
+
+const parseOutputNameConfig = (value: unknown): OutputNameConfig => {
+  if (typeof value !== 'string') {
+    return {baseName: 'render', custom: false};
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return {baseName: 'render', custom: false};
+  }
+
+  const normalizedBase = safeBasename(trimmed);
+  return {
+    baseName: normalizedBase || 'render',
+    custom: true,
+  };
+};
+
+const getMaybeValue = (
+  obj: Record<string, unknown>,
+  keys: string[],
+): unknown => {
+  for (const key of keys) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      return obj[key];
+    }
+  }
+
+  return undefined;
 };
 
 const readRequestBody = async (req: IncomingMessage): Promise<string> => {
@@ -65,9 +333,15 @@ const readRequestBody = async (req: IncomingMessage): Promise<string> => {
 const runRender = async (
   inputRelativePath: string,
   outputRelativePath: string,
+  templateChoice: TemplateChoice,
 ): Promise<string> => {
   return await new Promise<string>((resolve, reject) => {
-    const args = ['scripts/render.ts', inputRelativePath, outputRelativePath];
+    const args = [
+      'scripts/render.ts',
+      inputRelativePath,
+      outputRelativePath,
+      templateChoice,
+    ];
     const child = spawn(tsxBinary, args, {
       cwd: projectRoot,
       env: process.env,
@@ -99,6 +373,50 @@ const runRender = async (
   });
 };
 
+const renderJob = async (
+  sourceName: string,
+  stamp: string,
+  job: RenderJob,
+  outputNameConfig: OutputNameConfig,
+  usedVideoNames: Set<string>,
+): Promise<RenderResult> => {
+  const idx = String(job.index + 1).padStart(2, '0');
+  const jsonName = `${safeBasename(sourceName)}-${stamp}-${idx}.json`;
+  const baseName =
+    outputNameConfig.custom && outputNameConfig.baseName
+      ? outputNameConfig.baseName
+      : job.outputNameBase || `video-${idx}`;
+
+  let videoName = `${baseName}.mp4`;
+  if (usedVideoNames.has(videoName)) {
+    videoName = `${baseName}-${idx}.mp4`;
+  }
+  usedVideoNames.add(videoName);
+
+  const inputAbsolutePath = path.join(uploadsDir, jsonName);
+  const outputAbsolutePath = path.join(outDir, videoName);
+
+  const inputRelativePath = path.relative(projectRoot, inputAbsolutePath);
+  const outputRelativePath = path.relative(projectRoot, outputAbsolutePath);
+
+  await writeFile(inputAbsolutePath, JSON.stringify(job.inputObject, null, 2), 'utf-8');
+
+  const logs = await runRender(
+    inputRelativePath,
+    outputRelativePath,
+    job.templateType,
+  );
+
+  return {
+    index: job.index,
+    templateType: job.templateType,
+    videoUrl: `/renders/${videoName}`,
+    outputPath: outputAbsolutePath,
+    fileName: videoName,
+    logs,
+  };
+};
+
 const handleRender = async (req: IncomingMessage, res: ServerResponse) => {
   if (renderInProgress) {
     sendJson(res, 409, {
@@ -117,12 +435,18 @@ const handleRender = async (req: IncomingMessage, res: ServerResponse) => {
     return;
   }
 
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+  if (!isRecord(body)) {
     sendJson(res, 400, {error: 'Body must be a JSON object.'});
     return;
   }
 
-  const payload = body as {jsonText?: unknown; fileName?: unknown};
+  const payload = body as {
+    jsonText?: unknown;
+    fileName?: unknown;
+    templateType?: unknown;
+    outputName?: unknown;
+    name?: unknown;
+  };
 
   if (typeof payload.jsonText !== 'string' || payload.jsonText.trim().length === 0) {
     sendJson(res, 400, {error: 'Missing jsonText string in request body.'});
@@ -130,10 +454,23 @@ const handleRender = async (req: IncomingMessage, res: ServerResponse) => {
   }
 
   const rawJsonText = payload.jsonText.trim();
+  const requestedTemplateType = parseTemplateChoice(payload.templateType);
+  const outputNameConfig = parseOutputNameConfig(payload.outputName ?? payload.name);
   const sourceName =
     typeof payload.fileName === 'string' && payload.fileName.length > 0
       ? payload.fileName
       : 'input.json';
+
+  let jobs: RenderJob[] = [];
+
+  try {
+    const parsedInput = parseInputJson(rawJsonText);
+    jobs = extractJobsFromParsedJson(parsedInput, requestedTemplateType);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    sendJson(res, 400, {error: message});
+    return;
+  }
 
   const now = new Date();
   const stamp = `${now
@@ -142,29 +479,36 @@ const handleRender = async (req: IncomingMessage, res: ServerResponse) => {
     .replace('T', '_')
     .replace('Z', '')}-${Math.floor(Math.random() * 10000)}`;
 
-  const jsonName = `${safeBasename(sourceName)}-${stamp}.json`;
-  const videoName = `render-${stamp}.mp4`;
-
-  const inputAbsolutePath = path.join(uploadsDir, jsonName);
-  const outputAbsolutePath = path.join(outDir, videoName);
-
-  const inputRelativePath = path.relative(projectRoot, inputAbsolutePath);
-  const outputRelativePath = path.relative(projectRoot, outputAbsolutePath);
-
   await mkdir(uploadsDir, {recursive: true});
   await mkdir(outDir, {recursive: true});
-  await writeFile(inputAbsolutePath, rawJsonText, 'utf-8');
 
   renderInProgress = true;
 
   try {
-    const logs = await runRender(inputRelativePath, outputRelativePath);
+    const videos: RenderResult[] = [];
+    const usedVideoNames = new Set<string>();
+
+    for (const job of jobs) {
+      const result = await renderJob(
+        sourceName,
+        stamp,
+        job,
+        outputNameConfig,
+        usedVideoNames,
+      );
+      videos.push(result);
+    }
 
     sendJson(res, 200, {
       ok: true,
-      videoUrl: `/renders/${videoName}`,
-      outputPath: outputAbsolutePath,
-      logs,
+      count: videos.length,
+      templateTypeRequested: requestedTemplateType,
+      outputNameBase: outputNameConfig.baseName,
+      videos,
+      // Compatibility with existing front logic
+      videoUrl: videos[0]?.videoUrl ?? null,
+      outputPath: videos[0]?.outputPath ?? null,
+      logs: videos.map((v) => `#${v.index + 1} [${v.templateType}]\n${v.logs}`).join('\n\n'),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

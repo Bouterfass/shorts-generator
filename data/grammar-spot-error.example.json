@@ -1,0 +1,9 @@
+{
+  "type": "grammar_mistake",
+  "language": "fr",
+  "hook": "You're B2 if you can spot the mistake 👇",
+  "sentence": "I am agree with you.",
+  "cta": "Can you fix it?",
+  "backgroundVideoPath": "backgrounds/bgspoterror.mp4",
+  "musicPath": "audio/chillsound.mp3"
+}

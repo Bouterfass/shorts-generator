@@ -30,9 +30,48 @@ export type Quiz2ChoicesInput = {
   accentColor?: string;
 };
 
+export type GrammarMistakeInput = {
+  type: 'grammar_mistake' | 'spot_error';
+  title?: string;
+  language?: string;
+  hook: string;
+  sentence: string;
+  cta: string;
+  backgroundVideoPath?: string;
+  musicPath?: string;
+  accentColor?: string;
+};
+
+export type VocabularyListWord = {
+  word: string;
+  translation: string;
+};
+
+export type VocabularyVoiceSegment = {
+  src: string;
+  startFrame: number;
+  volume?: number;
+};
+
+export type VocabularyListInput = {
+  type: 'vocabulary_list';
+  title: string;
+  difficulty?: string;
+  language?: string;
+  words: VocabularyListWord[];
+  cta?: string;
+  background?: 'carou1' | 'carou2';
+  backgroundImagePath?: string;
+  voiceSegments?: VocabularyVoiceSegment[];
+};
+
 export type VideoInput = PromoVideoInput;
 
-export type AnyVideoInput = PromoVideoInput | Quiz2ChoicesInput;
+export type AnyVideoInput =
+  | PromoVideoInput
+  | Quiz2ChoicesInput
+  | GrammarMistakeInput
+  | VocabularyListInput;
 
 export const defaultVideoInput: PromoVideoInput = {
   type: 'promo',
@@ -74,4 +113,34 @@ export const defaultQuiz2ChoicesInput: Quiz2ChoicesInput = {
       correct: 0,
     },
   ],
+};
+
+export const defaultGrammarMistakeInput: GrammarMistakeInput = {
+  type: 'grammar_mistake',
+  title: 'spot_error',
+  language: '',
+  hook: "You're B2 if you can spot the mistake 👇",
+  sentence: 'I am agree with you.',
+  cta: 'Can you fix it?',
+  backgroundVideoPath: 'backgrounds/bgspoterror.mp4',
+  musicPath: 'audio/chillsound.mp3',
+  accentColor: '#f8fafc',
+};
+
+export const defaultVocabularyListInput: VocabularyListInput = {
+  type: 'vocabulary_list',
+  title: 'French Colors 🇫🇷',
+  difficulty: 'beginner',
+  language: 'french',
+  words: [
+    {word: 'Rouge', translation: 'Red'},
+    {word: 'Bleu', translation: 'Blue'},
+    {word: 'Vert', translation: 'Green'},
+    {word: 'Jaune', translation: 'Yellow'},
+    {word: 'Noir', translation: 'Black'},
+  ],
+  cta: 'Which word did you already know?',
+  background: 'carou1',
+  backgroundImagePath: 'backgrounds/carou1.jpg',
+  voiceSegments: [],
 };
